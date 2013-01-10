@@ -28,10 +28,21 @@ sub doInventory {
     my @tabOS = split(/-/,$OSLevel);
     my $OSComment = "Maintenance Level : $tabOS[1]";
 
+    # LPAR ID and Name
+    my $vmid;
+    my $vmname;
+
+    my $unameL = getFirstLine(command => 'uname -L');
+    if ($unameL =~ /^\d/) {
+        ($vmid, $vmname) = (split('\s', $s));
+    }
+
     $inventory->setHardware({
         OSNAME     => "$OSName $OSVersion",
         OSVERSION  => $OSLevel,
         OSCOMMENTS => $OSComment,
+        VMID       => $vmid,
+        VMNAME     => $vmname
     });
 
     $inventory->setOperatingSystem({
