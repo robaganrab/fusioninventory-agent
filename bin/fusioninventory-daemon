@@ -31,7 +31,6 @@ GetOptions(
     'logfile=s',
     'logfile-maxsize=i',
     'no-httpd',
-    'no-task=s',
     'no-p2p',
     'password|p=s',
     'proxy|P=s',
@@ -94,9 +93,6 @@ B<fusioninventory-agent> [options] [--server server|--local path]
                                      in seconds (3600)
     --lazy                         do not contact the target before
                                    next scheduled time
-
-  Task selection options:
-    --no-task=TASK                 do not run given task
 
   Network options:
     -P --proxy=PROXY               proxy address
@@ -213,18 +209,6 @@ after the initial contact, in favor of server-specified parameter
 Do not contact the target before next scheduled time.
 
 This option is only available when the agent is not run as a server.
-
-=back
-
-=head2 Task selection options
-
-=over
-
-=item B<--no-task>=I<TASK>
-
-Do not run given task.
-
-Multiple values can be specified, using comma as a separator.
 
 =back
 
