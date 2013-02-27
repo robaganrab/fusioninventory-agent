@@ -37,8 +37,6 @@ GetOptions(
     'server|s=s',
     'timeout=i',
     'user|u=s',
-    # deprecated options
-    'stdout',
 ) or pod2usage(-verbose => 0);
 
 pod2usage(-verbose => 0, -exitstatus => 0) if $options->{help};

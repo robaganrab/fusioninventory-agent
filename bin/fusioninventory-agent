@@ -54,8 +54,6 @@ GetOptions(
     'user|u=s',
     'version',
     'wait|w=s',
-    # deprecated options
-    'stdout',
 ) or pod2usage(-verbose => 0);
 
 pod2usage(-verbose => 0, -exitstatus => 0) if $options->{help};
