@@ -16,8 +16,6 @@ my $options = {};
 
 GetOptions(
     $options,
-    'additional-content=s',
-    'backend-collect-timeout=s',
     'ca-cert-dir=s',
     'ca-cert-file=s',
     'conf-file=s',
@@ -26,17 +24,13 @@ GetOptions(
     'no-fork',
     'debug+',
     'delaytime=s',
-    'force|f',
     'help|h',
-    'html',
     'lazy',
     'local|l=s',
     'logger=s',
     'logfile=s',
     'logfile-maxsize=i',
-    'no-category=s',
     'no-httpd',
-    'no-ssl-check',
     'no-task=s',
     'no-p2p',
     'password|p=s',
@@ -44,9 +38,7 @@ GetOptions(
     'httpd-ip=s',
     'httpd-port=s',
     'httpd-trust=s',
-    'scan-homedirs',
     'server|s=s',
-    'tag|t=s',
     'timeout=i',
     'user|u=s',
     'wait|w=s',
@@ -105,20 +97,6 @@ B<fusioninventory-agent> [options] [--server server|--local path]
 
   Task selection options:
     --no-task=TASK                 do not run given task
-
-  Inventory task specific options:
-    --no-category=CATEGORY         do not list given category items
-    --scan-homedirs                scan use home directories (false)
-    --html                         save the inventory as HTML (false)
-    -f --force                     always send data to server (false)
-    -t --tag=TAG                   mark the machine with given tag
-    --backend-collect-timeout=TIME timeout for inventory modules
-                                     execution (30)
-    --additional-content=FILE      additional inventory content file
-
-  Package deployment task specific options:
-    --no-p2p                       do not use peer to peer to download
-                                     files (false)
 
   Network options:
     -P --proxy=PROXY               proxy address
@@ -247,78 +225,6 @@ This option is only available when the agent is not run as a server.
 Do not run given task.
 
 Multiple values can be specified, using comma as a separator.
-
-=back
-
-=head2 Inventory task specific options
-
-=over
-
-=item B<--no-category>=I<CATEGORY>
-
-Do not list given category items in inventory.
-
-Multiple values can be specified, using comma as a separator. The available
-categories are:
-
-=over 4
-
-=item
-
-printer
-
-=item
-
-software
-
-=item
-
-environment
-
-=item
-
-process
-
-=back
-
-=item B<--scan-homedirs>
-
-Allow the agent to scan home directories for virtual machines.
-
-=item B<--html>
-
-Save the inventory as HTML.
-
-This is only used for local inventories.
-
-=item B<-f>, B<--force>
-
-Send an inventory to the server, even if this last one doesn't ask for it.
-
-=item B<--tag>=I<TAG>
-
-Mark the machine with given tag.
-
-=item B<--backend-collect-timeout>=I<TIME>
-
-Timeout for inventory modules execution.
-
-=item B<--additional-content>=I<FILE>
-
-Additional inventory content file.
-
-This file should be an XML file, using same syntax as the one produced by the
-agent.
-
-=back
-
-=head2 Package deployment task specific options
-
-=over
-
-=item B<--no-p2p>
-
-Do not use peer to peer to download files.
 
 =back
 
