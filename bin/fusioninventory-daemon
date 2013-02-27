@@ -23,9 +23,7 @@ GetOptions(
     'color',
     'no-fork',
     'debug+',
-    'delaytime=s',
     'help|h',
-    'lazy',
     'logger=s',
     'logfile=s',
     'logfile-maxsize=i',
@@ -39,7 +37,6 @@ GetOptions(
     'server|s=s',
     'timeout=i',
     'user|u=s',
-    'wait|w=s',
     # deprecated options
     'stdout',
 ) or pod2usage(-verbose => 0);
@@ -54,11 +51,6 @@ my %setup = (
 );
 
 my $agent = FusionInventory::Agent->new(%setup);
-
-if ($options->{wait}) {
-    my $time = int rand($options->{wait});
-    sleep $time;
-}
 
 eval {
     $agent->init(options => $options);
@@ -85,12 +77,6 @@ B<fusioninventory-agent> [options] [--server server]
 
   Target definition options:
     -s --server=URI                send tasks result to a server
-
-  Target scheduling options:
-    --delaytime=LIMIT              maximum delay before first target,
-                                     in seconds (3600)
-    --lazy                         do not contact the target before
-                                   next scheduled time
 
   Network options:
     -P --proxy=PROXY               proxy address
@@ -121,8 +107,6 @@ B<fusioninventory-agent> [options] [--server server]
     --conf-file=FILE               configuration file
 
   Execution mode options:
-    -w --wait=LIMIT                maximum delay before execution,
-                                     in seconds
     --no-fork                      don't fork in background (false)
     --debug                        debug mode (false)
 
@@ -164,25 +148,6 @@ and FusionInventory for GLPI this one:
     http://servername/glpi/plugins/fusioninventory/front/plugin_fusioninventory.communication.php
 
 Multiple values can be specified, using comma as a separator.
-
-=head2 Target scheduling options
-
-=over
-
-=item B<--delaytime>=I<LIMIT>
-
-Set an initial delay before the first target, whose value is computed randomly
-between LIMIT / 2 and LIMIT seconds. This setting is ignored for server targets
-after the initial contact, in favor of server-specified parameter
-(PROLOG_FREQ).
-
-=item B<--lazy>
-
-Do not contact the target before next scheduled time.
-
-This option is only available when the agent is not run as a server.
-
-=back
 
 =head2 Server target specific options
 
@@ -335,12 +300,6 @@ Use I<FILE> as configuration file (implies file configuration backend).
 =head2 Execution mode options
 
 =over
-
-=item B<-w> I<LIMIT>, B<--wait>=I<LIMIT>
-
-Wait a random delay whose value is computed randomly between 0 and LIMIT
-seconds, before execution. This is useful when execution is triggered from some
-kind of system scheduling on multiple clients, to spread the server load.
 
 =item B<--no-fork>
 
