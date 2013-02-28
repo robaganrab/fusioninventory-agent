@@ -64,6 +64,40 @@ sub init {
     $logger->debug("Storage directory: $self->{vardir}");
     $logger->debug("Lib directory: $self->{libdir}");
 
+    # compute servers list
+    if (!@{$config->{server}}) {
+        $logger->error("No server defined, aborting");
+        exit 1;
+    }
+
+    foreach my $url (@{$config->{server}}) {
+        push @{$self->{targets}},
+            FusionInventory::Agent::Target::Server->new(
+                logger     => $logger,
+                deviceid   => $self->{deviceid},
+                delaytime  => $config->{delaytime},
+                basevardir => $self->{vardir},
+                url        => $url,
+                tag        => $config->{tag},
+            );
+    }
+
+    # compute tasks list
+    my %available = $self->getAvailableTasks(fork => 1);
+    my @tasks = keys %available;
+
+    if (!@tasks) {
+        $logger->error("No tasks available, aborting");
+        exit 1;
+    }
+
+    $logger->debug("Available tasks:");
+    foreach my $task (keys %available) {
+        $logger->debug("- $task: $available{$task}");
+    }
+
+    $self->{tasks} = \@tasks;
+
     $self->{storage} = FusionInventory::Agent::Storage->new(
         logger    => $logger,
         directory => $self->{vardir}
@@ -76,37 +110,6 @@ sub init {
     $self->{token}    = _computeToken()    if !$self->{token};
 
     $self->_saveState();
-
-    # create target list
-    if ($config->{server}) {
-        foreach my $url (@{$config->{server}}) {
-            push @{$self->{targets}},
-                FusionInventory::Agent::Target::Server->new(
-                    logger     => $logger,
-                    deviceid   => $self->{deviceid},
-                    delaytime  => $config->{delaytime},
-                    basevardir => $self->{vardir},
-                    url        => $url,
-                    tag        => $config->{tag},
-                );
-        }
-    }
-
-    if (!$self->{targets}) {
-        $logger->error("No target defined, aborting");
-        exit 1;
-    }
-
-    # compute list of allowed tasks
-    my %available = $self->getAvailableTasks(fork => 1);
-    my @tasks = keys %available;
-
-    $logger->debug("Available tasks:");
-    foreach my $task (keys %available) {
-        $logger->debug("- $task: $available{$task}");
-    }
-
-    $self->{tasks} = \@tasks;
 
     # create HTTP interface
     if (!$config->{'no-httpd'}) {
