@@ -12,7 +12,6 @@ use IO::Handle;
 use FusionInventory::Agent::Config;
 use FusionInventory::Agent::HTTP::Client::OCS;
 use FusionInventory::Agent::Logger;
-use FusionInventory::Agent::Scheduler;
 use FusionInventory::Agent::Storage;
 use FusionInventory::Agent::Task;
 use FusionInventory::Agent::Target::Server;
@@ -79,18 +78,10 @@ sub init {
 
     $self->_saveState();
 
-    $self->{scheduler} = FusionInventory::Agent::Scheduler->new(
-        logger     => $logger,
-        lazy       => $config->{lazy},
-        wait       => $config->{wait},
-        background => $config->{daemon} || $config->{service}
-    );
-    my $scheduler = $self->{scheduler};
-
     # create target list
     if ($config->{server}) {
         foreach my $url (@{$config->{server}}) {
-            $scheduler->addTarget(
+            push @{$self->{targets}},
                 FusionInventory::Agent::Target::Server->new(
                     logger     => $logger,
                     deviceid   => $self->{deviceid},
@@ -98,12 +89,11 @@ sub init {
                     basevardir => $self->{vardir},
                     url        => $url,
                     tag        => $config->{tag},
-                )
-            );
+                );
         }
     }
 
-    if (!$scheduler->getTargets()) {
+    if (!$self->{targets}) {
         $logger->error("No target defined, aborting");
         exit 1;
     }
@@ -160,11 +150,10 @@ sub init {
             threads::shared::share($status);
             threads::shared::share($token);
 
-            $_->setShared() foreach $scheduler->getTargets();
+            $_->setShared() foreach @{$self->{targets}};
 
             $self->{server} = FusionInventory::Agent::HTTP::Server->new(
                 logger          => $logger,
-                scheduler       => $scheduler,
                 agent           => $self,
                 htmldir         => $self->{datadir} . '/html',
                 ip              => $config->{'httpd-ip'},
@@ -306,6 +295,28 @@ sub resetToken {
 sub getStatus {
     my ($self) = @_;
     return $self->{status};
+}
+
+sub getNextTarget {
+    my ($self) = @_;
+
+    return unless @{$self->{targets}};
+
+    # block until a target is eligible to run, then return it
+    while (1) {
+        foreach my $target (@{$self->{targets}}) {
+            if (time > $target->getNextRunDate()) {
+                return $target;
+            }
+        }
+        sleep(10);
+    }
+}
+
+sub getTargets {
+    my ($self) = @_;
+
+    return @{$self->{targets}}
 }
 
 sub getAvailableTasks {
