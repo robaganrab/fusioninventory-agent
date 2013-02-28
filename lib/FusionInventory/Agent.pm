@@ -109,7 +109,7 @@ sub init {
     $self->{tasks} = \@tasks;
 
     # create HTTP interface
-    if (($config->{daemon} || $config->{service}) && !$config->{'no-httpd'}) {
+    if (!$config->{'no-httpd'}) {
         FusionInventory::Agent::HTTP::Server->require();
         if ($EVAL_ERROR) {
             $logger->debug("Failed to load HTTP server: $EVAL_ERROR");
@@ -204,23 +204,16 @@ sub _runTask {
 
     $self->{status} = "running task $name";
 
-    if ($self->{config}->{daemon} || $self->{config}->{service}) {
-        # server mode: run each task in a child process
-        if (my $pid = fork()) {
-            # parent
-            waitpid($pid, 0);
-        } else {
-            # child
-            die "fork failed: $ERRNO" unless defined $pid;
-
-            $self->{logger}->debug("running task $name in process $PID");
-            $self->_runTaskReal($target, $name, $response);
-            exit(0);
-        }
+    if (my $pid = fork()) {
+        # parent
+        waitpid($pid, 0);
     } else {
-        # standalone mode: run each task directly
-        $self->{logger}->debug("running task $name");
+        # child
+        die "fork failed: $ERRNO" unless defined $pid;
+
+        $self->{logger}->debug("running task $name in process $PID");
         $self->_runTaskReal($target, $name, $response);
+        exit(0);
     }
 }
 
