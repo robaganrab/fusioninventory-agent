@@ -3,7 +3,6 @@ package FusionInventory::Agent;
 use strict;
 use warnings;
 
-use Cwd;
 use English qw(-no_match_vars);
 use UNIVERSAL::require;
 use File::Glob;
@@ -96,32 +95,6 @@ sub init {
     if (!$self->{targets}) {
         $logger->error("No target defined, aborting");
         exit 1;
-    }
-
-    if ($config->{daemon} && !$config->{'no-fork'}) {
-
-        $logger->debug("Time to call Proc::Daemon");
-
-        Proc::Daemon->require();
-        if ($EVAL_ERROR) {
-            $logger->error("Can't load Proc::Daemon. Is the module installed?");
-            exit 1;
-        }
-
-        my $cwd = getcwd();
-        Proc::Daemon::Init();
-        $logger->debug("Daemon started");
-
-
-        # If we use relative path, we must stay in the current directory
-        if (substr( $params{libdir}, 0, 1 ) ne '/') {
-            chdir($cwd);
-        }
-
-        if ($self->_isAlreadyRunning()) {
-            $logger->debug("An agent is already runnnig, exiting...");
-            exit 1;
-        }
     }
 
     # compute list of allowed tasks
@@ -396,20 +369,6 @@ sub _getTaskVersion {
     }
 
     return $version;
-}
-
-sub _isAlreadyRunning {
-    my ($self) = @_;
-
-    Proc::PID::File->require();
-    if ($EVAL_ERROR) {
-        $self->{logger}->debug(
-            'Proc::PID::File unavailable, unable to check for running agent'
-        );
-        return 0;
-    }
-
-    return Proc::PID::File->running();
 }
 
 sub _loadState {

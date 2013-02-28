@@ -4,9 +4,12 @@ use strict;
 use warnings;
 use lib './lib';
 
+use Cwd;
 use English qw(-no_match_vars);
 use Getopt::Long;
 use Pod::Usage;
+use Proc::Daemon;
+use Proc::PID::File;
 
 use FusionInventory::Agent;
 
@@ -52,6 +55,31 @@ my $agent = FusionInventory::Agent->new(%setup);
 
 eval {
     $agent->init(options => $options);
+};
+
+if ($EVAL_ERROR) {
+    print STDERR "Initialisation failure:.\n";
+    print STDERR $EVAL_ERROR;
+    exit 1;
+}
+
+if ($options->{'no-fork'}) {
+
+    my $cwd = getcwd();
+    Proc::Daemon::Init();
+
+    # If we use relative path, we must stay in the current directory
+    if (substr( $setup{libdir}, 0, 1 ) ne '/') {
+        chdir($cwd);
+    }
+
+    if (Proc::PID::File->running()) {
+        print STDERR "An agent is already runnnig, exiting...";
+        exit 1;
+    }
+}
+
+eval {
     $agent->run();
 };
 
