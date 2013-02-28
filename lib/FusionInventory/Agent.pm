@@ -98,7 +98,7 @@ sub init {
     }
 
     # compute list of allowed tasks
-    my %available = $self->getAvailableTasks(disabledTasks => $config->{'no-task'});
+    my %available = $self->getAvailableTasks(fork => 1);
     my @tasks = keys %available;
 
     $logger->debug("Available tasks:");
@@ -304,7 +304,7 @@ sub getAvailableTasks {
         next if $disabled{lc($name)};
 
         my $version;
-        if ($self->{config}->{daemon} || $self->{config}->{service}) {
+        if ($params{fork}) {
             # server mode: check each task version in a child process
             my ($reader, $writer);
             pipe($reader, $writer);
