@@ -15,7 +15,6 @@ use FusionInventory::Agent::Logger;
 use FusionInventory::Agent::Scheduler;
 use FusionInventory::Agent::Storage;
 use FusionInventory::Agent::Task;
-use FusionInventory::Agent::Target::Local;
 use FusionInventory::Agent::Target::Server;
 use FusionInventory::Agent::Tools;
 use FusionInventory::Agent::Tools::Hostname;
@@ -89,21 +88,6 @@ sub init {
     my $scheduler = $self->{scheduler};
 
     # create target list
-    if ($config->{local}) {
-        foreach my $path (@{$config->{local}}) {
-            $scheduler->addTarget(
-                FusionInventory::Agent::Target::Local->new(
-                    logger     => $logger,
-                    deviceid   => $self->{deviceid},
-                    delaytime  => $config->{delaytime},
-                    basevardir => $self->{vardir},
-                    path       => $path,
-                    html       => $config->{html},
-                )
-            );
-        }
-    }
-
     if ($config->{server}) {
         foreach my $url (@{$config->{server}}) {
             $scheduler->addTarget(
