@@ -107,7 +107,6 @@ sub init {
     $self->_loadState();
 
     $self->{deviceid} = _computeDeviceId() if !$self->{deviceid};
-    $self->{token}    = _computeToken()    if !$self->{token};
 
     $self->_saveState();
 
@@ -122,11 +121,17 @@ sub init {
             # calling share(\$self->{status}) directly breaks in testing
             # context, hence the need to use an intermediate variable
             my $status = \$self->{status};
-            my $token = \$self->{token};
             threads::shared::share($status);
-            threads::shared::share($token);
 
             $_->setShared() foreach @{$self->{targets}};
+
+            # compute trusted addresses
+            my $trust = $config->{'httpd-trust'};
+            if ($config->{server}) {
+                foreach my $url (@{$config->{server}}) {
+                    push @{$config->{'httpd-trust'}}, URI->new($url)->host();
+                }
+            }
 
             $self->{server} = FusionInventory::Agent::HTTP::Server->new(
                 logger          => $logger,
@@ -134,7 +139,7 @@ sub init {
                 htmldir         => $self->{datadir} . '/html',
                 ip              => $config->{'httpd-ip'},
                 port            => $config->{'httpd-port'},
-                trust           => $config->{'httpd-trust'},
+                trust           => $trust
             );
         }
     }
@@ -147,13 +152,40 @@ sub run {
 
     $self->{status} = 'waiting';
 
-    # endless loop in server mode
-    while (my $target = $self->{scheduler}->getNextTarget()) {
-        eval {
-            $self->_runTarget($target);
-        };
-        $self->{logger}->fault($EVAL_ERROR) if $EVAL_ERROR;
-        $target->resetNextRunDate();
+    if ($self->{config}->{daemon} || $self->{config}->{service}) {
+        # background mode: check each targets every 10 seconds
+        while (1) {
+            my $time = time();
+            foreach my $target (@{$self->{targets}}) {
+
+                next if $time < $target->getNextRunDate();
+
+                eval {
+                    $self->_runTarget($target);
+                };
+                $self->{logger}->fault($EVAL_ERROR) if $EVAL_ERROR;
+                $target->resetNextRunDate();
+            }
+            sleep(10);
+        }
+    } else {
+        # foreground mode: check each targets once
+        my $time = time();
+        foreach my $target (@{$self->{targets}}) {
+
+            if ($self->{config}->{lazy} && $time < $target->getNextRunDate()) {
+                $self->{logger}->info(
+                    "$target->{id} is not ready yet, next server contact " .
+                    "planned for " . localtime($target->getNextRunDate())
+                );
+                next;
+            }
+
+            eval {
+                $self->_runTarget($target);
+            };
+            $self->{logger}->fault($EVAL_ERROR) if $EVAL_ERROR;
+        }
     }
 }
 
@@ -176,7 +208,6 @@ sub _runTarget {
         );
 
         my $prolog = FusionInventory::Agent::XML::Query::Prolog->new(
-            token    => $self->{token},
             deviceid => $self->{deviceid},
         );
 
@@ -237,7 +268,7 @@ sub _runTaskReal {
     );
 
     if (!$task->isEnabled($response)) {
-        $self->{logger}->info("task $name is not enabled");
+        $self->{logger}->info("task $name execution not requested");
         return;
     }
 
@@ -251,19 +282,15 @@ sub _runTaskReal {
     );
 }
 
-sub getToken {
-    my ($self) = @_;
-    return $self->{token};
-}
-
-sub resetToken {
-    my ($self) = @_;
-    $self->{token} = _computeToken();
-}
-
 sub getStatus {
     my ($self) = @_;
     return $self->{status};
+}
+
+sub getTargets {
+    my ($self) = @_;
+
+    return @{$self->{targets}};
 }
 
 sub getNextTarget {
@@ -372,7 +399,6 @@ sub _loadState {
 
     my $data = $self->{storage}->restore(name => 'FusionInventory-Agent');
 
-    $self->{token}    = $data->{token}    if $data->{token};
     $self->{deviceid} = $data->{deviceid} if $data->{deviceid};
 }
 
@@ -382,16 +408,9 @@ sub _saveState {
     $self->{storage}->save(
         name => 'FusionInventory-Agent',
         data => {
-            token    => $self->{token},
             deviceid => $self->{deviceid},
         }
     );
-}
-
-# compute a random token
-sub _computeToken {
-    my @chars = ('A'..'Z');
-    return join('', map { $chars[rand @chars] } 1..8);
 }
 
 # compute an unique agent identifier, based on host name and current time
@@ -451,17 +470,13 @@ Initialize the agent.
 
 Run the agent.
 
-=head2 getToken()
-
-Get the current authentication token.
-
-=head2 resetToken()
-
-Set the current authentication token to a random value.
-
 =head2 getStatus()
 
 Get the current agent status.
+
+=head2 getTargets()
+
+Get all targets.
 
 =head2 getAvailableTasks()
 
