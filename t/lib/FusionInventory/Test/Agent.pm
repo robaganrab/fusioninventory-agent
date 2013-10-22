@@ -8,8 +8,8 @@ sub new {
     my ($class) = @_;
 
     my $self = {
-        status  => 'ok',
-        targets => [],
+        status      => 'ok',
+        controllers => [],
     };
     bless $self, $class;
 

@@ -19,9 +19,9 @@ our $VERSION = $FusionInventory::Agent::VERSION;
 sub isEnabled {
     my ($self, %params) = @_;
 
-    # always enabled for local target
+    # always enabled for local controller
     return 1 unless
-        $self->{target}->isa('FusionInventory::Agent::Target::Server');
+        $self->{controller}->isa('FusionInventory::Agent::Controller::Server');
 
     if ($self->{config}->{force}) {
         $self->{logger}->debug("Prolog response ignored");
@@ -46,27 +46,27 @@ sub run {
     $self->{logger}->debug("running FusionInventory Inventory task");
 
     # use given output broker, otherwise use either local or server broker,
-    # according to target type
+    # according to controller type
     my $broker;
     if ($params{broker}) {
         $broker = $params{broker};
-    } elsif ($self->{target}->isa('FusionInventory::Agent::Target::Local')) {
-        my $path = $self->{target}->getPath();
+    } elsif ($self->{controller}->isa('FusionInventory::Agent::Controller::Local')) {
+        my $path = $self->{controller}->getPath();
         if ($path eq '-') {
             $broker = FusionInventory::Agent::Broker::Inventory::Stdout->new(
                 deviceid => $self->{deviceid},
             );
         } else {
             $broker = FusionInventory::Agent::Broker::Inventory::Filesystem->new(
-                target   => $self->{target}->getPath(),
-                format   => $self->{target}->{format},
+                target   => $self->{controller}->getPath(),
+                format   => $self->{controller}->{format},
                 datadir  => $self->{datadir},
                 deviceid => $self->{deviceid},
             );
         }
-    } elsif ($self->{target}->isa('FusionInventory::Agent::Target::Server')) {
+    } elsif ($self->{controller}->isa('FusionInventory::Agent::Controller::Server')) {
         $broker = FusionInventory::Agent::Broker::Inventory::Server->new(
-            target       => $self->{target}->getUrl(),
+            target       => $self->{controller}->getUrl(),
             deviceid     => $self->{deviceid},
             logger       => $self->{logger},
             user         => $params{user},

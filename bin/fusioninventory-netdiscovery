@@ -56,12 +56,12 @@ pod2usage(
 my $agent = FusionInventory::Agent->new(%setup);
 
 my $discovery = FusionInventory::Agent::Task::NetDiscovery->new(
-    config   => $agent->{config},
-    confdir  => $agent->{confdir},
-    datadir  => $agent->{datadir},
-    logger   => $agent->{logger},
-    deviceid => $agent->{deviceid},
-    target   => FusionInventory::Agent::Task::NetInventory::Target->new(),
+    config     => $agent->{config},
+    confdir    => $agent->{confdir},
+    datadir    => $agent->{datadir},
+    logger     => $agent->{logger},
+    deviceid   => $agent->{deviceid},
+    controller => FusionInventory::Agent::Task::NetInventory::Controller->new(),
 );
 
 $discovery->{options} = {
@@ -129,7 +129,7 @@ sub getDictionary {
     return $string;
 }
 
-package FusionInventory::Agent::Task::NetInventory::Target;
+package FusionInventory::Agent::Task::NetInventory::Controller;
 
 sub new {
     my ($class, %params) = @_;

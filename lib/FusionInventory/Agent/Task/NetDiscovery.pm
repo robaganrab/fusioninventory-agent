@@ -22,7 +22,7 @@ sub isEnabled {
     my ($self, %params) = @_;
 
     return unless
-        $self->{target}->isa('FusionInventory::Agent::Target::Server');
+        $self->{controller}->isa('FusionInventory::Agent::Controller::Server');
 
     my $response = $params{response};
 
@@ -45,11 +45,11 @@ sub run {
 
     $self->{logger}->debug("running FusionInventory NetDiscovery task");
 
-    # use given output broker, otherwise assume the target is a GLPI server
+    # use given output broker, otherwise assume the controller is a GLPI server
     my $broker =
         $params{broker} ||
         FusionInventory::Agent::Broker::Server->new(
-            target       => $self->{target}->getUrl(),
+            target       => $self->{controller}->getUrl(),
             logger       => $self->{logger},
             user         => $params{user},
             password     => $params{password},
@@ -206,7 +206,7 @@ sub _getDictionary {
     my ($self, $options, $broker, $pid) = @_;
 
     my ($dictionary, $hash);
-    my $storage = $self->{target}->getStorage();
+    my $storage = $self->{controller}->getStorage();
 
     if ($options->{DICO}) {
         # new dictionary sent by the server, load it and save it for next run

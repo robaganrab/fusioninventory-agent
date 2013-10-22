@@ -66,12 +66,12 @@ my $type =
                           undef        ;
 
 my $inventory = FusionInventory::Agent::Task::NetInventory->new(
-    config   => $agent->{config},
-    confdir  => $agent->{confdir},
-    datadir  => $agent->{datadir},
-    logger   => $agent->{logger},
-    deviceid => $agent->{deviceid},
-    target   => {},
+    config     => $agent->{config},
+    confdir    => $agent->{confdir},
+    datadir    => $agent->{datadir},
+    logger     => $agent->{logger},
+    deviceid   => $agent->{deviceid},
+    controller => {},
 );
 
 $inventory->{options} = {
