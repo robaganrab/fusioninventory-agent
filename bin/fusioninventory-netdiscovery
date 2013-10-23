@@ -9,7 +9,7 @@ use Getopt::Long;
 use Pod::Usage;
 
 use FusionInventory::Agent;
-use FusionInventory::Agent::Broker;
+use FusionInventory::Agent::Target;
 use FusionInventory::Agent::Task::NetDiscovery;
 
 my %setup = (
@@ -107,7 +107,7 @@ if (defined($options->{entity})) {
     $discovery->{options}->{RANGEIP}->[0]->{ENTITY} = $options->{entity};
 }
 
-my $broker = FusionInventory::Agent::Broker->create(
+my $target = FusionInventory::Agent::Target->create(
     target  => $options->{target},
     task    => 'netdiscovery',
     verbose => $options->{verbose}
@@ -115,7 +115,7 @@ my $broker = FusionInventory::Agent::Broker->create(
 
 eval {
     $agent->init(options => $options);
-    $agent->runSingleTask(task => $discovery, broker => $broker);
+    $agent->runSingleTask(task => $discovery, target => $target);
 };
 
 sub getDictionary {

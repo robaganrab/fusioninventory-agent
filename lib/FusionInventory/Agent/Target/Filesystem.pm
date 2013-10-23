@@ -1,4 +1,4 @@
-package FusionInventory::Agent::Broker::Filesystem;
+package FusionInventory::Agent::Target::Filesystem;
 
 use strict;
 use warnings;

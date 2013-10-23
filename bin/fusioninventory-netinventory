@@ -10,7 +10,7 @@ use Pod::Usage;
 use XML::TreePP;
 
 use FusionInventory::Agent;
-use FusionInventory::Agent::Broker;
+use FusionInventory::Agent::Target;
 use FusionInventory::Agent::Task::NetInventory;
 use FusionInventory::Agent::Tools::Hardware;
 
@@ -105,7 +105,7 @@ if (defined($options->{entity})) {
     $inventory->{options}->{DEVICE}->[0]->{ENTITY} = $options->{entity};
 }
 
-my $broker = FusionInventory::Agent::Broker->create(
+my $target = FusionInventory::Agent::Target->create(
     target  => $options->{target},
     task    => 'netdiscovery',
     verbose => $options->{verbose}
@@ -113,7 +113,7 @@ my $broker = FusionInventory::Agent::Broker->create(
 
 eval {
     $agent->init(options => $options);
-    $agent->runSingleTask(task => $inventory, broker => $broker);
+    $agent->runSingleTask(task => $inventory, target => $target);
 };
 
 __END__

@@ -8,7 +8,7 @@ use English qw(-no_match_vars);
 use UNIVERSAL::require;
 
 use FusionInventory::Agent;
-use FusionInventory::Agent::Broker::Server;
+use FusionInventory::Agent::Target::Server;
 use FusionInventory::Agent::Tools;
 use FusionInventory::Agent::XML::Query;
 
@@ -41,10 +41,10 @@ sub run {
 
     $self->{logger}->debug("running FusionInventory NetInventory task");
 
-    # use given output broker, otherwise assume the controller is a GLPI server
-    my $broker =
-        $params{broker} ||
-        FusionInventory::Agent::Broker::Server->new(
+    # use given target, if defined, otherwise assume a server target
+    my $target =
+        $params{target} ||
+        FusionInventory::Agent::Target::Server->new(
             target       => $self->{controller}->getUrl(),
             logger       => $self->{logger},
             user         => $params{user},
@@ -91,7 +91,7 @@ sub run {
 
     # send initial message to the server
     $self->_sendMessage(
-        $broker,
+        $target,
         {
             AGENT => {
                 START        => 1,
@@ -111,14 +111,14 @@ sub run {
             MODULEVERSION => $VERSION,
             PROCESSNUMBER => $pid
         };
-        $self->_sendMessage($broker, $data);
+        $self->_sendMessage($target, $data);
     }
 
     $engine->finish();
 
     # send final message to the server
     $self->_sendMessage(
-        $broker,
+        $target,
         {
             AGENT => {
                 END => 1,
@@ -130,7 +130,7 @@ sub run {
 }
 
 sub _sendMessage {
-    my ($self, $broker, $content) = @_;
+    my ($self, $target, $content) = @_;
 
    my $message = FusionInventory::Agent::XML::Query->new(
        deviceid => $self->{deviceid},
@@ -138,7 +138,7 @@ sub _sendMessage {
        content  => $content
    );
 
-   $broker->send(message => $message);
+   $target->send(message => $message);
 }
 
 sub _getIndexedModels {

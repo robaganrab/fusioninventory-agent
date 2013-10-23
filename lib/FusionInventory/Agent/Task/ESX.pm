@@ -5,7 +5,7 @@ use warnings;
 use base 'FusionInventory::Agent::Task';
 
 use FusionInventory::Agent;
-use FusionInventory::Agent::Broker::Server;
+use FusionInventory::Agent::Target::Server;
 use FusionInventory::Agent::HTTP::Client::Fusion;
 use FusionInventory::Agent::Inventory;
 use FusionInventory::Agent::Logger;
@@ -87,10 +87,10 @@ sub run {
     my @jobs = @{$self->{jobs}};
     $self->{logger}->info("Got " . @jobs . " VMware host(s) to inventory.");
 
-    # use given output broker, otherwise assume the controller is a GLPI server
-    my $broker =
-        $params{broker} ||
-        FusionInventory::Agent::Broker::Server->new(
+    # use given target, otherwise assume a server target
+    my $target =
+        $params{target} ||
+        FusionInventory::Agent::Target::Server->new(
             target       => $self->{controller}->getUrl(),
             logger       => $self->{logger},
             user         => $params{user},
@@ -134,7 +134,7 @@ sub run {
                 content  => $inventory->getContent()
             );
 
-            $broker->send(message => $message);
+            $target->send(message => $message);
         }
         $self->{controller}->send(
             "url" => $self->{esxRemote},

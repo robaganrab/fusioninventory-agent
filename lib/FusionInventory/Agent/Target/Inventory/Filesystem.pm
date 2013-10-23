@@ -1,8 +1,8 @@
-package FusionInventory::Agent::Broker::Inventory::Filesystem;
+package FusionInventory::Agent::Target::Inventory::Filesystem;
 
 use strict;
 use warnings;
-use base 'FusionInventory::Agent::Broker::Filesystem';
+use base 'FusionInventory::Agent::Target::Filesystem';
 
 use FusionInventory::Agent::XML::Query::Inventory;
 

@@ -10,7 +10,7 @@ use File::Temp;
 use Pod::Usage;
 
 use FusionInventory::Agent;
-use FusionInventory::Agent::Broker::Inventory;
+use FusionInventory::Agent::Target::Inventory;
 use FusionInventory::Agent::Task::Inventory;
 
 my %setup = (
@@ -48,15 +48,15 @@ pod2usage(-verbose => 0, -exitval => 0) if $options->{help};
 my $agent = FusionInventory::Agent->new(%setup);
 
 my $inventory = FusionInventory::Agent::Task::Inventory->new(
-    config   => $agent->{config},
-    confdir  => $agent->{confdir},
-    datadir  => $agent->{datadir},
-    logger   => $agent->{logger},
-    deviceid => $agent->{deviceid},
-    target   => {},
+    config     => $agent->{config},
+    confdir    => $agent->{confdir},
+    datadir    => $agent->{datadir},
+    logger     => $agent->{logger},
+    deviceid   => $agent->{deviceid},
+    controller => {},
 );
 
-my $broker = FusionInventory::Agent::Broker::Inventory->create(
+my $target = FusionInventory::Agent::Target::Inventory->create(
     target  => $options->{target},
     task    => 'inventory',
     verbose => $options->{verbose}
@@ -64,7 +64,7 @@ my $broker = FusionInventory::Agent::Broker::Inventory->create(
 
 eval {
     $agent->init(options => $options);
-    $agent->runSingleTask(task => $inventory, broker => $broker);
+    $agent->runSingleTask(task => $inventory, target => $target);
 };
 
 __END__

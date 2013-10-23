@@ -8,9 +8,9 @@ use English qw(-no_match_vars);
 use UNIVERSAL::require;
 
 use FusionInventory::Agent;
-use FusionInventory::Agent::Broker::Inventory::Stdout;
-use FusionInventory::Agent::Broker::Inventory::Filesystem;
-use FusionInventory::Agent::Broker::Inventory::Server;
+use FusionInventory::Agent::Target::Inventory::Stdout;
+use FusionInventory::Agent::Target::Inventory::Filesystem;
+use FusionInventory::Agent::Target::Inventory::Server;
 use FusionInventory::Agent::Tools;
 use FusionInventory::Agent::Inventory;
 
@@ -45,19 +45,18 @@ sub run {
 
     $self->{logger}->debug("running FusionInventory Inventory task");
 
-    # use given output broker, otherwise use either local or server broker,
-    # according to controller type
-    my $broker;
-    if ($params{broker}) {
-        $broker = $params{broker};
+    # use given target, if defined, otherwise a target matching controller type
+    my $target;
+    if ($params{target}) {
+        $target = $params{target};
     } elsif ($self->{controller}->isa('FusionInventory::Agent::Controller::Local')) {
         my $path = $self->{controller}->getPath();
         if ($path eq '-') {
-            $broker = FusionInventory::Agent::Broker::Inventory::Stdout->new(
+            $target = FusionInventory::Agent::Target::Inventory::Stdout->new(
                 deviceid => $self->{deviceid},
             );
         } else {
-            $broker = FusionInventory::Agent::Broker::Inventory::Filesystem->new(
+            $target = FusionInventory::Agent::Target::Inventory::Filesystem->new(
                 target   => $self->{controller}->getPath(),
                 format   => $self->{controller}->{format},
                 datadir  => $self->{datadir},
@@ -65,7 +64,7 @@ sub run {
             );
         }
     } elsif ($self->{controller}->isa('FusionInventory::Agent::Controller::Server')) {
-        $broker = FusionInventory::Agent::Broker::Inventory::Server->new(
+        $target = FusionInventory::Agent::Target::Inventory::Server->new(
             target       => $self->{controller}->getUrl(),
             deviceid     => $self->{deviceid},
             logger       => $self->{logger},
@@ -105,7 +104,7 @@ sub run {
     $self->_initModulesList(\%disabled);
     $self->_feedInventory($inventory, \%disabled);
 
-    my $response = $broker->send(inventory => $inventory);
+    my $response = $target->send(inventory => $inventory);
 }
 
 sub _initModulesList {
